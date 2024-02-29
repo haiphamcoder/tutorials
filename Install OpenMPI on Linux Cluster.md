@@ -51,11 +51,11 @@ Ta thực hiện trên tất cả các máy như sau:
   Kết quả trông như sau (còn tùy thuộc vào kết nối mạng bằng wifi hay cáp LAN):
 
   ```output
-    ...
-    wlp0s20f3: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-          inet 192.168.76.240  netmask 255.255.240.0  broadcast 192.168.79.255
-          inet6 fe80::f91f:985:87e4:224f  prefixlen 64  scopeid 0x20<link>
-      ...
+  ...
+  wlp0s20f3: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.76.240  netmask 255.255.240.0  broadcast 192.168.79.255
+        inet6 fe80::f91f:985:87e4:224f  prefixlen 64  scopeid 0x20<link>
+  ...
   ```
 
   Giá trị **192.168.76.240** chính là địa chỉ ip của máy đó.
