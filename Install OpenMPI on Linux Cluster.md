@@ -127,7 +127,7 @@ Máy sẽ giao tiếp qua mạng thông qua SSH và chia sẻ dữ liệu qua NF
 
   ```output
   Generating public/private rsa key pair.
-  Enter file in which to save the key (/home/haipn/.ssh/id_rsa):
+  Enter file in which to save the key (/home/mpiuser/.ssh/id_rsa):
   ```
 
   Nhấn `Enter` để xác nhận dùng đường dẫn mặc định `/home/mpiuser/.ssh/id_rsa`
