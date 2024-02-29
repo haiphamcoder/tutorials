@@ -4,7 +4,7 @@
 
 ## Điều kiện tiên quyết
 
-- Hệ điều hành: Ubuntu 20.04.6 LTS x86_64
+- Hệ điều hành: Ubuntu 20.04.6 Desktop LTS x86_64
 
 - MPI: <https://www.open-mpi.org/software/>
 
@@ -12,84 +12,9 @@
 
 ## Các bước để tạo cụm MPI
 
-### Bước 1: Cài đặt bộ công cụ mạng net-tools cho Ubuntu
+### Bước 1: Tạo người dùng mới
 
-```bash
-sudo apt install net-tools
-```
-
-Kiểm tra địa chỉ ip trên mối máy
-
-```bash
-ifconfig
-```
-
-Kết quả trông như sau:
-
-```output
-...
-wlp0s20f3: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-        inet 192.168.76.240  netmask 255.255.240.0  broadcast 192.168.79.255
-        inet6 fe80::f91f:985:87e4:224f  prefixlen 64  scopeid 0x20<link>
-    ...
-```
-
-Giá trị **192.168.76.240** chính là địa chỉ ip của máy đó.
-
-Giả sử, cluster của ta gồm 4 node. Ta kiểm tra được ip lần lượt là:
-
-```output
-Máy A: 192.168.76.240
-Máy B: 192.168.76.114
-Máy C: 192.168.76.80
-Máy D: 192.168.76.34
-```
-
-Chọn máy A làm master node, các máy còn lại sẽ là slave node
-
-### Bước 2: Configure hosts file
-
-Chúng ta sẽ liên lạc giữa các máy tính và chúng ta không muốn nhập địa chỉ IP thường xuyên. Thay vào đó, chúng ta có thể đặt tên cho các nút khác nhau trong mạng mà chúng ta muốn liên lạc. Tệp **/etc/hosts** được hệ điều hành thiết bị sử dụng để ánh xạ tên host thành địa chỉ IP.
-
-Trên máy A (master node), ta thực hiện:
-
-```bash
-sudo nano /etc/hosts
-```
-
-Sau đó thêm IP master node và IP slave node vào tệp này như dưới đây và lưu lại:
-
-Chú ý: các dòng khác thì comment hết
-
-```output
-127.0.0.1       localhost
-192.168.76.240  master
-192.168.76.114  slave1
-192.168.76.80   slave2
-192.168.76.34   slave3
-```
-
-Trên máy B (slave node), ta thực hiện:
-
-```bash
-sudo nano /etc/hosts
-```
-
-Sau đó thêm IP master node và IP slave node vào tệp này như dưới đây và lưu lại:
-
-Chú ý: các dòng khác thì comment hết
-
-```output
-127.0.0.1       localhost
-192.168.76.240  master
-192.168.76.114  slave1
-```
-
-Các máy C, D làm tương tự như với máy B.
-
-### Bước 3: Tạo người dùng mới
-
-Chúng ta có thể vận hành cụm bằng cách sử dụng  user hiện có. Tốt hơn là tạo một người dùng mới để mọi việc đơn giản hơn. Tạo tài khoản người dùng mới có cùng tên người dùng trong tất cả các máy để đơn giản hóa mọi việc.
+Chúng ta có thể vận hành cụm bằng cách sử dụng user hiện có. Nhưng tốt hơn hết là tạo một người dùng mới để mọi việc đơn giản hơn. Tạo tài khoản người dùng mới có cùng tên người dùng trong tất cả các máy để đơn giản hóa mọi việc.
 
 Ta thực hiện trên tất cả các máy như sau:
 
@@ -99,11 +24,90 @@ Ta thực hiện trên tất cả các máy như sau:
   sudo adduser mpiuser
   ```
 
-- Biến mpiuser thành sudoer:
+  (Chú ý: Đặt mật khẩu giống nhau cho tài khoản `mpiuser` trên tất cả các máy)
+
+- Biến tài khoản `mpiuser` thành `sudoer`:
 
   ```bash
   sudo usermod -aG sudo mpiuser 
   ```
+
+- Logout khỏi user hiện tại và Login với user `mpiuser` vừa tạo.
+
+### Bước 2: Cài đặt bộ công cụ mạng net-tools cho Ubuntu
+
+- Cài đặt net-tools:
+
+  ```bash
+  sudo apt install net-tools
+  ```
+
+- Kiểm tra địa chỉ ip trên mỗi máy
+
+  ```bash
+  ifconfig
+  ```
+
+  Kết quả trông như sau (còn tùy thuộc vào kết nối mạng bằng wifi hay cáp LAN):
+
+  ```output
+  ...
+  wlp0s20f3: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+          inet 192.168.76.240  netmask 255.255.240.0  broadcast 192.168.79.255
+          inet6 fe80::f91f:985:87e4:224f  prefixlen 64  scopeid 0x20<link>
+      ...
+  ```
+
+  Giá trị **192.168.76.240** chính là địa chỉ ip của máy đó.
+
+- Giả sử, cluster của ta gồm 4 node. Ta kiểm tra được ip lần lượt là:
+
+  ```output
+  Máy A: 192.168.76.240
+  Máy B: 192.168.76.114
+  Máy C: 192.168.76.80
+  Máy D: 192.168.76.34
+  ```
+
+- Chọn máy A làm master node, các máy còn lại sẽ là slave node
+
+### Bước 3: Configure hosts file
+
+Chúng ta sẽ liên lạc giữa các máy tính và chúng ta không muốn nhập địa chỉ IP thường xuyên. Thay vào đó, chúng ta có thể đặt tên cho các nút khác nhau trong mạng mà chúng ta muốn liên lạc. Tệp **/etc/hosts** được hệ điều hành thiết bị sử dụng để ánh xạ tên host thành địa chỉ IP.
+
+- Trên máy A (master node), ta thực hiện:
+
+  ```bash
+  sudo nano /etc/hosts
+  ```
+
+  Sau đó thêm IP slave node vào tệp này như dưới đây và lưu lại:
+
+  Chú ý: các dòng khác thì comment hết
+
+  ```output
+  127.0.0.1       localhost
+  192.168.76.114  slave1
+  192.168.76.80   slave2
+  192.168.76.34   slave3
+  ```
+
+- Trên máy B (slave node), ta thực hiện:
+
+  ```bash
+  sudo nano /etc/hosts
+  ```
+
+  Sau đó thêm IP master node vào tệp này như dưới đây và lưu lại:
+
+  Chú ý: các dòng khác thì comment hết
+
+  ```output
+  127.0.0.1       localhost
+  192.168.76.240  master
+  ```
+
+- Các máy C, D làm tương tự như với máy B.
 
 ### Bước 4: Thiết lập SSH
 
@@ -115,150 +119,159 @@ Máy sẽ giao tiếp qua mạng thông qua SSH và chia sẻ dữ liệu qua NF
   sudo apt install openssh-server openssh-client
   ```
 
-- Đăng nhập vào người dùng mới được tạo:
+- Tạo khóa RSA để xác thực SSH, ta dùng lệnh dưới đây:
 
   ```bash
-  su - mpiuser
+  ssh-keygen -t rsa
   ```
+
+  ```output
+  Generating public/private rsa key pair.
+  Enter file in which to save the key (/home/haipn/.ssh/id_rsa):
+  ```
+
+  Nhấn `Enter` để xác nhận dùng đường dẫn mặc định `/home/mpiuser/.ssh/id_rsa`
+
+  ```output
+  Enter passphrase (empty for no passphrase):
+  ```
+
+  Nhập passphrase ở đây giống nhau cho tất cả các máy.
+
+  Lúc này hệ thống sẽ sinh ra 2 file `id_rsa` và `id_rsa.pub` trong thư mục `/home/mpiuser/.ssh`
 
 - Điều hướng đến thư mục ~/.ssh:
   
   ```bash
   cd ~/.ssh
   ```
+
+  Sau đó thực hiện:
+
+  ```bash
+  cat id_rsa.pub >> authorized_keys
+  ```
+
+- Copy SSH Public Key giữa các node
   
-  Nếu đường dẫn không tồn tại, thì dùng lệnh sau để tạo:
+  - Đối với master node, ta thực hiện lần lượt các lệnh sau:
 
-  ```bash
-  mkdir -p ~/.ssh
-  ```
-
-- Tạo khóa RSA để xác thực SSH:
-
-  ```bash
-  ssh-keygen -t rsa
-  ```
-
-  - Đối với master node, ta nhập lại đường dẫn lưu file như sau:
-
-    ```output
-    /home/mpiuser/.ssh/id_rsa_master
+    ```bash
+    ssh-copy-id slave1
+    ssh-copy-id slave2
+    ssh-copy-id slave3
     ```
 
-  - Đối với slave node (máy B), ta nhập lại đường dẫn lưu file như sau:
+    Chú ý với mỗi lệnh, ta đều chọn `yes` và nhập mật khẩu đã tạo (giống nhau) cho mọi tài khoản `mpiuser` mà ta đã làm ở bước 1.
 
-    ```output
-    /home/mpiuser/.ssh/id_rsa_slave1
+  - Đối với các slave node (máy B, C và D), ta thực hiện lệnh sau:
+
+    ```bash
+    ssh-copy-id master
     ```
 
-  - Đối với slave node C và D, ta làm tương tự như máy B, chỉ thay tên file lần lượt thành id_rsa_slave2 và id_rsa_slave3
+### Bước 5: Thiết lập NFS
 
-- Copy file **/home/mpiuser/.ssh/id_rsa_master.pub** trong máy A (master node) sang các máy B, C, D (slave node)
+Chúng ta chia sẻ một thư mục thông qua NFS trong `master node` mà `slave node` sẽ gắn kết để trao đổi dữ liệu.
 
-- Copy file **/home/mpiuser/.ssh/id_rsa_slave1.pub** trong máy B (slave node) sang thư mục **/home/mpiuser/.ssh** trong máy A (master node). Tương tự với các máy C và D.
+- Cài đặt các gói cần thiết:
 
+  - Với `master node`, ta thực hiện:
 
+    ```bash
+    sudo apt install nfs-server
+    ```
 
-Bây giờ bạn có thể kết nối với các nút công nhân mà không cần nhập mật khẩu
+  - Với `slave node`, ta thực hiện:
+  
+    ```bash
+    sudo apt install nfs-client
+    ```
 
-nhân viên ssh2
+- Tạo thư mục `SharedFolder` để trao đổi dữ liệu. Trên tất cả các máy, ta thực hiện:
+  
+  ```bash
+  mkdir -p /home/mpiuser/Desktop/SharedFolder
+  sudo chown nobody:nogroup /home/mpiuser/Desktop/SharedFolder
+  sudo chmod 777 /home/mpiuser/Desktop/SharedFolder
+  ```
 
-Trong các nút công nhân sử dụng
+- Trên `master node`, ta thực hiện như dưới đây để cấp quyền chia sẻ thư mục `SharedFolder` cho các `slave node`:
 
-trình quản lý ssh-copy-id
+  - Chỉnh sửa file `/etc/exports`:
 
-Bước 4: Thiết lập NFS
+    ```bash
+    sudo nano /etc/exports
+    ```
 
-Chúng tôi chia sẻ một thư mục thông qua NFS trong trình quản lý mà nhân viên gắn kết để trao đổi dữ liệu.
+    Thêm vào các dòng sau:
 
-NFS-Server cho nút chính:
+    ```output
+    /home/mpiuser/Desktop/SharedFolder 192.168.76.114(rw,sync,no_root_squash,no_subtree_check)
+    /home/mpiuser/Desktop/SharedFolder 192.168.76.80(rw,sync,no_root_squash,no_subtree_check)
+    /home/mpiuser/Desktop/SharedFolder 192.168.76.34(rw,sync,no_root_squash,no_subtree_check)
+    ```
 
-Cài đặt các gói cần thiết bằng cách
+    Sau đó, nhấn `Ctrl+O` -> `Enter` để lưu lại. `Ctrl+X` để thoát.
 
-    sudo apt-get cài đặt nfs-kernel-server
+  - Tiếp đến, ta dùng lệnh sau:
 
-Chúng ta cần tạo một thư mục mà chúng ta sẽ chia sẻ trên mạng. Trong trường hợp của chúng tôi, chúng tôi đã sử dụng “đám mây”. Để xuất thư mục đám mây, chúng ta cần tạo một mục trong /etc/exports
+    ```bash
+    sudo exportfs -a
+    ```
+  
+  - Khởi động lại máy chủ NFS
 
-sudo nano /etc/exports
+    ```bash
+    sudo service nfs-server restart
+    ```
 
-Thêm vào
+- Sau khi thực hiện xong các bước trên, ta cần gắn kết các thư mục `SharedFolder` trên `master node` với `slave node`.
 
-    /home/mpiuser/cloud *(rw,sync,no_root_squash,no_subtree_check)
+  Trên `slave node`, ta thực hiện:
 
-Thay vì *, chúng tôi có thể cung cấp cụ thể địa chỉ IP mà chúng tôi muốn chia sẻ thư mục này hoặc chúng tôi có thể sử dụng*.
+  ```bash
+  sudo mount master:/home/mpiuser/Desktop/SharedFolder /home/mpiuser/Desktop/SharedFolder
+  ```
 
-Ví dụ:
+  Sau đó, ta kiểm tra bằng cách thêm một file bất kỳ vào vào thư mục `SharedFolder` trên `master node`, và reload lại thư mục `SharedFolder` trên `slave node`, nếu thấy dữ liệu đã được đồng bộ thì tức là ta đã thiết lập NFS thành công.
 
-    /home/mpiuser/cloud 172.20.36.121(rw,sync,no_root_squash,no_subtree_check)
+  Ta có thể dùng lệnh sau để kiểm tra các thư mục được gắn kết:
 
-Sau khi nhập xong, hãy chạy như sau.
+  ```bash
+  df -h
+  ```
 
-$ xuất khẩu -a
+  Chú ý: Mỗi lần khởi động lại hệ thống thì cần thực hiện `mount` lại.  
 
-Chạy lệnh trên mỗi khi có bất kỳ thay đổi nào được thực hiện đối với /etc/exports.
+### Bước 6: Chạy chương trình MPI (Thực hiện trên Master Node)
 
-Sử dụng Sudo importfs -a nếu câu lệnh trên không hoạt động.
+- Trên `master node`, tải file chương trình [tại đây](/prime_mpi.c) và chuyển file này vào thư mục `SharedFolder` trên `master node`
 
-Nếu được yêu cầu, hãy khởi động lại máy chủ NFS
+- Điều hướng đến thư mục `SharedFolder`:
 
-    sudo dịch vụ nfs-kernel-server khởi động lại
+  ```bash
+  cd /home/mpiuser/Desktop/SharedFolder
+  ```
 
-> NFS-worker cho các nút máy khách
+- Biên dịch file chương trình:
 
-Cài đặt các gói cần thiết
+  ```bash
+  mpicc prime_mpi.c -o prime_mpi
+  ```
 
-$ sudo apt-get cài đặt nfs-common
+- Chạy chương trình:
 
-Tạo một thư mục trong máy của công nhân có cùng tên – “cloud”
+  - Nếu ta chỉ muốn chạy trên `master node`, ta thực hiện lệnh sau:
 
-đám mây $ mkdir
+    ```bash
+    mpirun -np 2 ./prime_mpi
+    ```
 
-Và bây giờ, hãy gắn thư mục dùng chung như
+    Trong đó, `-np` là chỉ số tiến trình
 
-    sudo mount -t nfs manager:/home/mpiuser/cloud ~/cloud
+  - Để chạy trong Cluster, ta thực hiện:
 
-Để kiểm tra các thư mục được gắn kết,
-
-$ df -h
-
-Đây là cách nó sẽ hiển thị
-
-Để gắn kết vĩnh viễn để bạn không phải gắn thư mục dùng chung theo cách thủ công mỗi khi khởi động lại hệ thống, bạn có thể tạo một mục trong bảng hệ thống tệp của mình – tức là tệp /etc/fstab như thế này:
-
-$ nano /etc/fstab
-
-Thêm vào
-
-# THIẾT LẬP CỤM MPI
- người quản lý:/home/mpiuser/cloud /home/mpiuser/cloud nfs
-
-Bước 5: Chạy chương trình MPI
-
-Điều hướng đến thư mục chia sẻ NFS (“đám mây” trong trường hợp của chúng tôi) và tạo các tệp ở đó [hoặc chúng tôi có thể chỉ dán các tệp đầu ra). Để biên dịch mã, giả sử tên của nó là mpi_hello.c, chúng ta sẽ phải biên dịch mã theo cách dưới đây để tạo ra một mpi_hello có thể thực thi được.
-
-$ mpicc -o mpi_hello mpi_hello.c
-
-Để chỉ chạy nó trong máy chính, chúng tôi làm
-
-$ mpirun -np 2 ./mpi_helloBsend
-
-np – Số tiến trình = 2
-
-Để chạy mã trong một cụm
-
-$ mpirun -hostfile my_host ./mpi_hello
-
-Ở đây, tệp my_host xác định Địa chỉ IP và số lượng tiến trình sẽ được chạy.
-
-Tệp máy chủ mẫu:
-
-vị trí người quản lý=4 max_slots=40
- vị trí công nhân1=4 max_slots=40
- worker2 max_slots=40
- vị trí worker3=4 max_slots=40
-
-Ngoài ra,
-
-$ mpirun -np 5 -hosts worker,localhost ./mpi_hello
-
-Lưu ý : Tên máy chủ cũng có thể được thay thế bằng địa chỉ IP.
+    ```bash
+    mpirun --hostfile /etc/hosts -np 6 ./prime_mpi
+    ```
