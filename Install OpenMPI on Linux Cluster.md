@@ -34,7 +34,61 @@ Ta thực hiện trên tất cả các máy như sau:
 
 - Logout khỏi user hiện tại và Login với user `mpiuser` vừa tạo.
 
-### Bước 2: Cài đặt bộ công cụ mạng net-tools cho Ubuntu
+### Bước 2: Cài đặt OpenMPI
+
+- Cài đặt gói cần thiết để biên dịch phần mềm
+
+  ```bash
+  sudo apt install build-essential
+  ```
+
+- Tiếp đến, ta thực hiện lần lượt các lệnh sau:
+
+  ```bash
+  wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.2.tar.gz
+  tar -xvf openmpi-5.0.2.tar.gz
+  cd openmpi-5.0.2
+  ./configure --prefix="/usr/local/openmpi"
+  make
+  sudo make all install
+  ```
+
+- Chỉnh sửa file `.bashrc`
+
+  ```bash
+  cd /home/mpiuser
+  nano .bashrc
+  ```
+
+  Thêm vào cuối file các dòng sau:
+
+  ```bash
+  export MPIROOT="/usr/local/openmpi"
+  export PATH="${MPIROOT}/bin:$PATH"
+  export LD_LIBRARY_PATH="${MPIROOT}/lib:$LD_LIBRARY_PATH"
+  export MANPATH="${MPIROOT}/share/man:$MANPATH"
+  ```
+
+  `Ctrl+O` -> `Enter` để lưu lại. `Ctrl+X` để thoát.
+
+  Sau đó, tắt Terminal đi và bật lại.
+
+- Kiểm tra
+
+  ```bash
+  mpiexec --version
+  mpirun --version
+  ```
+
+  Nếu kết quả như dưới đây, thì ta đã cài đặt thành công:
+
+  ```output
+  mpiexec (Open MPI) 5.0.2
+
+  Report bugs to https://www.open-mpi.org/community/help/
+  ```
+
+### Bước 3: Cài đặt bộ công cụ mạng net-tools cho Ubuntu
 
 - Cài đặt net-tools:
 
@@ -71,7 +125,7 @@ Ta thực hiện trên tất cả các máy như sau:
 
 - Chọn máy A làm master node, các máy còn lại sẽ là slave node
 
-### Bước 3: Configure hosts file
+### Bước 4: Configure hosts file
 
 Chúng ta sẽ liên lạc giữa các máy tính và chúng ta không muốn nhập địa chỉ IP thường xuyên. Thay vào đó, chúng ta có thể đặt tên cho các nút khác nhau trong mạng mà chúng ta muốn liên lạc. Tệp **/etc/hosts** được hệ điều hành thiết bị sử dụng để ánh xạ tên host thành địa chỉ IP.
 
@@ -109,7 +163,7 @@ Chúng ta sẽ liên lạc giữa các máy tính và chúng ta không muốn nh
 
 - Các máy C, D làm tương tự như với máy B.
 
-### Bước 4: Thiết lập SSH
+### Bước 5: Thiết lập SSH
 
 Máy sẽ giao tiếp qua mạng thông qua SSH và chia sẻ dữ liệu qua NFS. Thực hiện theo quy trình dưới đây cho cả master node và slave node.
 
@@ -170,7 +224,7 @@ Máy sẽ giao tiếp qua mạng thông qua SSH và chia sẻ dữ liệu qua NF
     ssh-copy-id master
     ```
 
-### Bước 5: Thiết lập NFS
+### Bước 6: Thiết lập NFS
 
 Chúng ta chia sẻ một thư mục thông qua NFS trong `master node` mà `slave node` sẽ gắn kết để trao đổi dữ liệu.
 
@@ -244,7 +298,7 @@ Chúng ta chia sẻ một thư mục thông qua NFS trong `master node` mà `sla
 
   Chú ý: Mỗi lần khởi động lại hệ thống thì cần thực hiện `mount` lại.  
 
-### Bước 6: Chạy chương trình MPI (Thực hiện trên Master Node)
+### Bước 7: Chạy chương trình MPI (Thực hiện trên Master Node)
 
 - Trên `master node`, tải file chương trình [tại đây](/prime_mpi.c) và chuyển file này vào thư mục `SharedFolder` trên `master node`
 
