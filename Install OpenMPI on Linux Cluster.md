@@ -233,13 +233,13 @@ Chúng ta chia sẻ một thư mục thông qua NFS trong `master node` mà `sla
   - Với `master node`, ta thực hiện:
 
     ```bash
-    sudo apt install nfs-server
+    sudo apt install nfs-kernel-server
     ```
 
   - Với `slave node`, ta thực hiện:
   
     ```bash
-    sudo apt install nfs-client
+    sudo apt install nfs-common
     ```
 
 - Tạo thư mục `SharedFolder` để trao đổi dữ liệu. Trên tất cả các máy, ta thực hiện:
@@ -277,7 +277,7 @@ Chúng ta chia sẻ một thư mục thông qua NFS trong `master node` mà `sla
   - Khởi động lại máy chủ NFS
 
     ```bash
-    sudo service nfs-server restart
+    sudo service nfs-kernel-server restart
     ```
 
 - Sau khi thực hiện xong các bước trên, ta cần gắn kết các thư mục `SharedFolder` trên `master node` với `slave node`.
